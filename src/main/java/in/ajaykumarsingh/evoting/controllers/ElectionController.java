@@ -9,6 +9,8 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import in.ajaykumarsingh.evoting.models.Candidate;
 import in.ajaykumarsingh.evoting.models.Election;
 import in.ajaykumarsingh.evoting.repositories.AreaRepository;
@@ -19,6 +21,8 @@ import in.ajaykumarsingh.evoting.repositories.ElectionRepository;
 @RequestMapping("/election")
 @Secured("ADMIN")
 public class ElectionController {
+
+	private static final PageRequest AREA_PAGE = PageRequest.of(0, 1000, Sort.by("id"));
 	
 	@Autowired
 	private AreaRepository areaRepository;
@@ -34,7 +38,7 @@ public class ElectionController {
 	
 	@GetMapping("/add")
 	public String addElection(Model model) {
-		model.addAttribute("areas", areaRepository.findAll());
+		model.addAttribute("areas", areaRepository.findAll(AREA_PAGE).getContent());
 		model.addAttribute("election", new Election());		
 		return "election/add";
 	}
@@ -42,7 +46,7 @@ public class ElectionController {
 	@PostMapping("/add")
 	public String addElection(Election election, BindingResult result, Model model) {
 		if(result.hasErrors()) {
-			model.addAttribute("areas", areaRepository.findAll());
+			model.addAttribute("areas", areaRepository.findAll(AREA_PAGE).getContent());
 			return "election/add";
 		}
 		electionRepository.save(election);
@@ -53,7 +57,7 @@ public class ElectionController {
 	public String showEdit(@PathVariable("id") int id, Model model) {
 		
 		Election election=electionRepository.findById(id).orElseThrow(()->new IllegalArgumentException("Invalid election Id"+id));
-		model.addAttribute("areas", areaRepository.findAll());
+		model.addAttribute("areas", areaRepository.findAll(AREA_PAGE).getContent());
 		model.addAttribute("election", election);		
 		return "election/edit";
 	}
@@ -61,7 +65,7 @@ public class ElectionController {
 	@PostMapping("/edit/{id}")
 	public String edit(@PathVariable("id") int id, Election election, BindingResult result, Model model) {
 		if(result.hasErrors()) {
-			model.addAttribute("areas", areaRepository.findAll());
+			model.addAttribute("areas", areaRepository.findAll(AREA_PAGE).getContent());
 			election.setId(id);
 			return "election/edit";
 		}
